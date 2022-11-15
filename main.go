@@ -20,5 +20,5 @@ func main() {
 
 	router.HandleFunc("/redirects/{uuid}", h.Redirecter) // actual redirect handler
 
-	http.ListenAndServe(":8090", router)
+	http.ListenAndServe("0.0.0.0:8090", router)
 }

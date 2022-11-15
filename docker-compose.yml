@@ -1,6 +1,16 @@
 version: "3.9"
 
 services:
+  redirecter:
+    build: .
+    container_name: redirecter
+    depends_on:
+      - database
+    volumes:
+      - .:/app
+    ports:
+    - "8090:8090"
+
   database:
     container_name: database
     image: postgres:12.8
