@@ -14,7 +14,11 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/links", h.GetAllLinks).Methods(http.MethodGet)
 	router.HandleFunc("/links/{id}", h.GetLink).Methods(http.MethodGet)
+	router.HandleFunc("/links/{id}", h.UpdateLink).Methods(http.MethodPatch)
 	router.HandleFunc("/links/{id}", h.DeleteLink).Methods(http.MethodDelete)
 	router.HandleFunc("/links", h.CreateLink).Methods(http.MethodPost)
+
+	router.HandleFunc("/redirects/{uuid}", h.Redirecter) // actual redirect handler
+
 	http.ListenAndServe(":8090", router)
 }

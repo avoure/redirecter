@@ -1,11 +1,15 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type RedirectMap struct {
 	ID             uint      `json:"id" gorm:"primaryKey"`
+	UUID           uuid.UUID `json:"uuid"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
-	SourceURL      *string   `json:"sourceUrl" gorm:"unique"`
-	DestinationURL *string   `json:"destinationUrl"`
+	DestinationURL *string   `json:"destinationUrl" gorm:"unique"`
 }
