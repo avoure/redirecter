@@ -4,6 +4,8 @@ services:
   redirecter:
     image: tilla1145/redirecter:latest
     container_name: redirecter
+    networks:
+      - default
     depends_on:
       - database
     volumes:
