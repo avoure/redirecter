@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   redirecter:
-    build: .
+    image: tilla1145/redirecter:latest
     container_name: redirecter
     depends_on:
       - database

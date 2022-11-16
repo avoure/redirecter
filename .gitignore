@@ -17,3 +17,4 @@
 # Go workspace file
 go.work
 .env
+docker-compose.override.yml
