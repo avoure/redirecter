@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"redirecter/pkg/db"
 	"redirecter/pkg/handlers"
@@ -20,5 +21,8 @@ func main() {
 
 	router.HandleFunc("/redirects/{uuid}", h.Redirecter) // actual redirect handler
 
-	http.ListenAndServe("0.0.0.0:8090", router)
+	err := http.ListenAndServe("0.0.0.0:8090", router)
+	if err != nil {
+		log.Fatal("Server exited with error:", err)
+	}
 }
