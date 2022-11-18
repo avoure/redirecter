@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -44,7 +43,7 @@ func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	if result := h.DB.Create(&link); result.Error != nil {
-		fmt.Println(result.Error)
+		log.Printf("Failed to create link: %s", result.Error)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Duplicated source url"})
 	} else {
@@ -65,7 +64,7 @@ func (h Handler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &updatedLink)
 	var link models.RedirectMap
 	if result := h.DB.First(&link, linkId); result.Error != nil {
-		fmt.Println(result.Error)
+		log.Printf("Failed to update link %s: %s", linkId, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"})
@@ -82,7 +81,7 @@ func (h Handler) DeleteLink(w http.ResponseWriter, r *http.Request) {
 	linkId := mux.Vars(r)["id"]
 	var link models.RedirectMap
 	if result := h.DB.First(&link, linkId); result.Error != nil {
-		fmt.Println(result.Error)
+		log.Printf("Failed to delete link %s: %s", linkId, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"})
@@ -98,7 +97,7 @@ func (h Handler) GetAllLinks(w http.ResponseWriter, r *http.Request) {
 	var links []models.RedirectMap
 
 	if result := h.DB.Find(&links); result.Error != nil {
-		fmt.Println(result.Error)
+		log.Printf("Failed to get links: %s", result.Error)
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -112,7 +111,7 @@ func (h Handler) GetLink(w http.ResponseWriter, r *http.Request) {
 	var link models.RedirectMap
 	w.Header().Add("Content-Type", "application/json")
 	if result := h.DB.First(&link, linkId); result.Error != nil {
-		fmt.Println(result.Error)
+		log.Printf("Failed to get link %s: %s", linkId, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"})
@@ -128,7 +127,7 @@ func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
 	linkUUID := mux.Vars(r)["uuid"]
 	var link models.RedirectMap
 	if result := h.DB.Find(&link, "UUID = ?", linkUUID); result.Error != nil {
-		fmt.Println(result.Error)
+		log.Printf("Failed to get link %s: %s", linkUUID, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Cannot redirect"})
