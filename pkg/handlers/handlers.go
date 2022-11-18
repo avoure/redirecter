@@ -174,3 +174,18 @@ func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Logged attempt %s for link %s in DB.", newCall.ID, link.UUID)
 }
+
+func (h Handler) GetCallsForLink(w http.ResponseWriter, r *http.Request) {
+	var calls []models.IncomingCall
+	linkUUID := mux.Vars(r)["linkUUID"]
+	if result := h.DB.Order("created_at desc").Find(&calls, "redirect_uuid = ?", linkUUID); result.Error != nil {
+		log.Printf("Failed to retrieve calls for %s: %s", linkUUID, result.Error)
+
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(calls)
+}

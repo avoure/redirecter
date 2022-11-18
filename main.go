@@ -20,7 +20,9 @@ func main() {
 	router.HandleFunc("/links/{id}", h.DeleteLink).Methods(http.MethodDelete)
 	router.HandleFunc("/links", h.CreateLink).Methods(http.MethodPost)
 
-	router.HandleFunc("/redirects/{uuid}", h.Redirecter) // actual redirect handler
+	router.HandleFunc("/redirects/{uuid}", h.Redirecter)
+
+	router.HandleFunc("/calls/{linkUUID}", h.GetCallsForLink).Methods(http.MethodGet)
 
 	log.Print("Listening on ", listenAddr)
 	err := http.ListenAndServe(listenAddr, router)
