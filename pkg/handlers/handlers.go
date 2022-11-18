@@ -133,7 +133,7 @@ func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "Cannot redirect"})
 	}
 
-	http.Redirect(w, r, link.DestinationURL, http.StatusFound)
+	http.Redirect(w, r, link.DestinationURL, http.StatusTemporaryRedirect)
 
 	log.Printf("Redirected call %s for %s", callID, linkUUID)
 
