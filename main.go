@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"redirecter/pkg/db"
 	"redirecter/pkg/handlers"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	listenAddr := "0.0.0.0:8090"
 	DB := db.Init()
 	h := handlers.NewHandler(DB)
 	router := mux.NewRouter()
@@ -18,7 +20,13 @@ func main() {
 	router.HandleFunc("/links/{id}", h.DeleteLink).Methods(http.MethodDelete)
 	router.HandleFunc("/links", h.CreateLink).Methods(http.MethodPost)
 
-	router.HandleFunc("/redirects/{uuid}", h.Redirecter) // actual redirect handler
+	router.HandleFunc("/redirects/{uuid}", h.Redirecter)
 
-	http.ListenAndServe("0.0.0.0:8090", router)
+	router.HandleFunc("/calls/{linkUUID}", h.GetCallsForLink).Methods(http.MethodGet)
+
+	log.Print("Listening on ", listenAddr)
+	err := http.ListenAndServe(listenAddr, router)
+	if err != nil {
+		log.Fatal("Server exited with error:", err)
+	}
 }
