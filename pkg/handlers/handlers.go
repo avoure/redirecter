@@ -135,21 +135,7 @@ func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, link.DestinationURL, http.StatusFound)
 
-	log.Printf("Redirected call %s for %s, logging attempt.", callID, linkUUID)
-
-	headers := ""
-	if reqHeadersBytes, err := json.Marshal(r.Header); err != nil {
-		log.Printf("Failed to Marshal request Headers for call %s: %s", callID, err)
-	} else {
-		headers = string(reqHeadersBytes)
-	}
-
-	queryParams := ""
-	if qpBytes, err := json.Marshal(r.URL.Query()); err != nil {
-		log.Printf("Failed to Marshal request query params for call %s: %s", callID, err)
-	} else {
-		queryParams = string(qpBytes)
-	}
+	log.Printf("Redirected call %s for %s", callID, linkUUID)
 
 	body := []byte{}
 	defer r.Body.Close()
@@ -158,21 +144,7 @@ func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
 	} else {
 		body = bodyBytes
 	}
-
-	newCall := models.IncomingCall{
-		ID:           callID,
-		CreatedAt:    time.Now(),
-		RedirectUUID: link.UUID,
-		Method:       r.Method,
-		Headers:      headers,
-		QueryParams:  queryParams,
-		Body:         body,
-	}
-	if result := h.DB.Create(&newCall); result.Error != nil {
-		log.Printf("Failed to store call %s in DB: %s", callID, result.Error)
-	}
-
-	log.Printf("Logged attempt %s for link %s in DB.", newCall.ID, link.UUID)
+	go h.storeCall(callID, link, r, body)
 }
 
 func (h Handler) GetCallsForLink(w http.ResponseWriter, r *http.Request) {
@@ -188,4 +160,35 @@ func (h Handler) GetCallsForLink(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(calls)
+}
+
+func (h Handler) storeCall(callID uuid.UUID, link models.RedirectMap, r *http.Request, body []byte) {
+	headers := ""
+	if reqHeadersBytes, err := json.Marshal(r.Header); err != nil {
+		log.Printf("Failed to Marshal request Headers for call %s: %s", callID, err)
+	} else {
+		headers = string(reqHeadersBytes)
+	}
+
+	queryParams := ""
+	if qpBytes, err := json.Marshal(r.URL.Query()); err != nil {
+		log.Printf("Failed to Marshal request query params for call %s: %s", callID, err)
+	} else {
+		queryParams = string(qpBytes)
+	}
+
+	newCall := models.IncomingCall{
+		ID:           callID,
+		CreatedAt:    time.Now(),
+		RedirectUUID: link.UUID,
+		Method:       r.Method,
+		Headers:      headers,
+		QueryParams:  queryParams,
+		Body:         body,
+	}
+	if result := h.DB.Create(&newCall); result.Error != nil {
+		log.Printf("Failed to store call %s in DB: %s", callID, result.Error)
+	}
+
+	log.Printf("Logged call %s for link %s in DB.", newCall.ID, link.UUID)
 }
