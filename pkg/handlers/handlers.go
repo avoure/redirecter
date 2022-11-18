@@ -3,11 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"redirecter/pkg/models"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -24,7 +25,7 @@ func NewHandler(db *gorm.DB) Handler {
 
 func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	requestBody, err := ioutil.ReadAll(r.Body)
+	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -32,9 +33,11 @@ func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	var link models.RedirectMap
 	link.UUID = uuid.New()
 	json.Unmarshal(requestBody, &link)
-	u, err := url.ParseRequestURI(*link.DestinationURL)
-	if err != nil {
-		fmt.Println("Requested destinationUrl: ", u)
+	if link.DestinationURL != "" {
+		_, err = url.ParseRequestURI(link.DestinationURL)
+	}
+	if err != nil || link.DestinationURL == "" {
+		log.Printf("Invalid destinationUrl: %s : %s", link.DestinationURL, err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Invalid destination URL"})
 		return
@@ -48,13 +51,12 @@ func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(link)
 	}
-
 }
 
 func (h Handler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	linkId := mux.Vars(r)["id"]
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -122,14 +124,54 @@ func (h Handler) GetLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
-	uuid := mux.Vars(r)["uuid"]
+	callID := uuid.New()
+	linkUUID := mux.Vars(r)["uuid"]
 	var link models.RedirectMap
-	if result := h.DB.Find(&link, "UUID = ?", uuid); result.Error != nil {
+	if result := h.DB.Find(&link, "UUID = ?", linkUUID); result.Error != nil {
 		fmt.Println(result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"status": "Cannot redirect"})
-	} else {
-		http.Redirect(w, r, *link.DestinationURL, http.StatusFound)
 	}
+
+	http.Redirect(w, r, link.DestinationURL, http.StatusFound)
+
+	log.Printf("Redirected call %s for %s, logging attempt.", callID, linkUUID)
+
+	headers := ""
+	if reqHeadersBytes, err := json.Marshal(r.Header); err != nil {
+		log.Printf("Failed to Marshal request Headers for call %s: %s", callID, err)
+	} else {
+		headers = string(reqHeadersBytes)
+	}
+
+	queryParams := ""
+	if qpBytes, err := json.Marshal(r.URL.Query()); err != nil {
+		log.Printf("Failed to Marshal request query params for call %s: %s", callID, err)
+	} else {
+		queryParams = string(qpBytes)
+	}
+
+	body := []byte{}
+	defer r.Body.Close()
+	if bodyBytes, err := io.ReadAll(r.Body); err != nil {
+		log.Printf("Failed to read body for call %s: %s", callID, err)
+	} else {
+		body = bodyBytes
+	}
+
+	newCall := models.IncomingCall{
+		ID:           callID,
+		CreatedAt:    time.Now(),
+		RedirectUUID: link.UUID,
+		Method:       r.Method,
+		Headers:      headers,
+		QueryParams:  queryParams,
+		Body:         body,
+	}
+	if result := h.DB.Create(&newCall); result.Error != nil {
+		log.Printf("Failed to store call %s in DB: %s", callID, result.Error)
+	}
+
+	log.Printf("Logged attempt %s for link %s in DB.", newCall.ID, link.UUID)
 }

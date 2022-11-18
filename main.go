@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	listenAddr := "0.0.0.0:8090"
 	DB := db.Init()
 	h := handlers.NewHandler(DB)
 	router := mux.NewRouter()
@@ -21,7 +22,8 @@ func main() {
 
 	router.HandleFunc("/redirects/{uuid}", h.Redirecter) // actual redirect handler
 
-	err := http.ListenAndServe("0.0.0.0:8090", router)
+	log.Print("Listening on ", listenAddr)
+	err := http.ListenAndServe(listenAddr, router)
 	if err != nil {
 		log.Fatal("Server exited with error:", err)
 	}

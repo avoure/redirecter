@@ -11,7 +11,7 @@ type RedirectMap struct {
 	UUID           uuid.UUID `json:"uuid"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
-	DestinationURL *string   `json:"destinationUrl" gorm:"unique"`
+	DestinationURL string    `json:"destinationUrl" gorm:"unique"`
 }
 
 type IncomingCall struct {
@@ -20,5 +20,6 @@ type IncomingCall struct {
 	RedirectUUID uuid.UUID `json:"redirectUUID"`
 	Method       string    `json:"method"`
 	Headers      string    `json:"headers"`
+	QueryParams  string    `json:"queryParams"`
 	Body         []byte    `json:"body"`
 }
