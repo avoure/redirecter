@@ -24,7 +24,7 @@ func main() {
 	getLinkHandler := handlers.AuthenticateMW(http.HandlerFunc(h.GetLink))
 	updateLinkHandler := handlers.AuthenticateMW(http.HandlerFunc(h.UpdateLink))
 	deleteLinkHandler := handlers.AuthenticateMW(http.HandlerFunc(h.DeleteLink))
-	createLinkHandler := handlers.AuthenticateMW(http.HandlerFunc(h.DeleteLink))
+	createLinkHandler := handlers.AuthenticateMW(http.HandlerFunc(h.CreateLink))
 	getCallsHandler := handlers.AuthenticateMW(http.HandlerFunc(h.GetCallsForLink))
 
 	router.Handle("/links", getAllLinkHandler).Methods(http.MethodGet)
