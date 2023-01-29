@@ -10,6 +10,7 @@ services:
       - .:/app
     ports:
     - "8090:8090"
+    restart: always
     networks:
       - redirect
 
