@@ -20,7 +20,7 @@ func Init() *gorm.DB {
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB)
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 	if err != nil {
-		log.Fatalln("Failed to connect to DB:", err)
+		log.Fatalln("Failed to connect to Database:", err)
 	}
 
 	err = db.AutoMigrate(&models.RedirectMap{}, &models.IncomingCall{})
