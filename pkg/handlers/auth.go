@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -20,7 +21,9 @@ func AuthenticateMW(next http.Handler) http.Handler {
 		if token != SECRET_TOKEN {
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+			if err := json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"}); err != nil {
+				fmt.Println("failed to send reposnse:", err)
+			}
 			return
 		}
 

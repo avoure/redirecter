@@ -31,24 +31,32 @@ func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 
 	var link models.RedirectMap
 	link.UUID = uuid.New()
-	json.Unmarshal(requestBody, &link)
+	if err := json.Unmarshal(requestBody, &link); err != nil {
+		log.Println("Cannot unpack request body")
+	}
 	if link.DestinationURL != "" {
 		_, err = url.ParseRequestURI(link.DestinationURL)
 	}
 	if err != nil || link.DestinationURL == "" {
 		log.Printf("Invalid destinationUrl: %s : %s", link.DestinationURL, err)
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Invalid destination URL"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Invalid destination URL"}); err != nil {
+			log.Println("Cannot write response")
+		}
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
 	if result := h.DB.Create(&link); result.Error != nil {
 		log.Printf("Failed to create link: %s", result.Error)
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Duplicated source url"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Duplicated source url"}); err != nil {
+			log.Println("Cannot write response")
+		}
 	} else {
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(link)
+		if err := json.NewEncoder(w).Encode(link); err != nil {
+			log.Println("Cannot write response")
+		}
 	}
 }
 
@@ -61,20 +69,26 @@ func (h Handler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var updatedLink models.RedirectMap
-	json.Unmarshal(body, &updatedLink)
+	if err := json.Unmarshal(body, &updatedLink); err != nil {
+		log.Println("Cannot unpack request body")
+	}
 	var link models.RedirectMap
 	if result := h.DB.First(&link, linkId); result.Error != nil {
 		log.Printf("Failed to update link %s: %s", linkId, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"}); err != nil {
+			log.Println("Cannot unpack request body")
+		}
 		return
 	}
 	link.DestinationURL = updatedLink.DestinationURL
 	h.DB.Save(&link)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(link)
+	if err := json.NewEncoder(w).Encode(link); err != nil {
+		log.Println("Cannot unpack request body")
+	}
 }
 
 func (h Handler) DeleteLink(w http.ResponseWriter, r *http.Request) {
@@ -84,11 +98,15 @@ func (h Handler) DeleteLink(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to delete link %s: %s", linkId, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"}); err != nil {
+			log.Println("Cannot unpack request body")
+		}
 	} else {
 		h.DB.Delete(&link)
 		w.WriteHeader(http.StatusAccepted)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Link successfully deleted"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Link successfully deleted"}); err != nil {
+			log.Println("Cannot unpack request body")
+		}
 	}
 
 }
@@ -102,7 +120,9 @@ func (h Handler) GetAllLinks(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(links)
+	if err := json.NewEncoder(w).Encode(links); err != nil {
+		log.Println("Cannot unpack request body")
+	}
 }
 
 func (h Handler) GetLink(w http.ResponseWriter, r *http.Request) {
@@ -114,11 +134,15 @@ func (h Handler) GetLink(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to get link %s: %s", linkId, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Link not found"}); err != nil {
+			log.Println("Cannot unpack request body")
+		}
 
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(link)
+		if err := json.NewEncoder(w).Encode(link); err != nil {
+			log.Println("Cannot unpack request body")
+		}
 	}
 }
 
@@ -130,7 +154,9 @@ func (h Handler) Redirecter(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to get link %s: %s", linkUUID, result.Error)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"status": "Cannot redirect"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "Cannot redirect"}); err != nil {
+			log.Println("Cannot unpack request body")
+		}
 	}
 
 	http.Redirect(w, r, link.DestinationURL, http.StatusTemporaryRedirect)
@@ -159,7 +185,9 @@ func (h Handler) GetCallsForLink(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(calls)
+	if err := json.NewEncoder(w).Encode(calls); err != nil {
+		log.Println("Cannot unpack request body")
+	}
 }
 
 func (h Handler) storeCall(callID uuid.UUID, link models.RedirectMap, r *http.Request, body []byte) {
