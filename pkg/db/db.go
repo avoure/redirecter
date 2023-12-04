@@ -25,7 +25,7 @@ func Init() *gorm.DB {
 
 	err = db.AutoMigrate(&models.RedirectMap{}, &models.IncomingCall{})
 	if err != nil {
-		log.Fatalln("Failed to migrate DB:", err)
+		log.Fatalln("Failed to migrate DB", err)
 	}
 
 	return db
