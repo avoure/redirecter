@@ -1,0 +1,19 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: |
+        docker login --username djanmamur --password ${{ secrets.ACTIONS_ACCESS_TOKEN }} ghcr.io
+        docker build . --tag ghcr.io/djanmamur/redirecter:latest
+        docker push ghcr.io/djanmamur/redirecter:latest
