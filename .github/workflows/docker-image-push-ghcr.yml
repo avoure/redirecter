@@ -35,12 +35,14 @@ jobs:
     if: ${{ success() }}
     runs-on: ubuntu-latest
     steps:
-    - name: install ssh keys
-      run: |
-        install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-    - name: connect and deploy
-      run: ssh -p 33 ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && docker-compose build && docker-compose up -d && exit"
-    - name: cleanup
-      run: rm -rf ~/.ssh
+      - name: restart the server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 33
+          script: |
+            cd ${{ secrets.WORK_DIR }} 
+            docker-compose up -d --build
+
