@@ -13,7 +13,6 @@ services:
     restart: always
     networks:
       - redirect
-
   database:
     container_name: database
     image: postgres:12.8
